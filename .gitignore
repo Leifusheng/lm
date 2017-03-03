@@ -1,3 +1,7 @@
-#.o
-#.bin
-#.d
+*.o
+*.bin
+*.d
+lm.config
+lm.creator
+lm.files
+lm.includes

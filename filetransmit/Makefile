@@ -14,5 +14,5 @@ $(target): ${objs}
 	$(CC) -MM $< > $@
 
 clean: 
-	rm *.bin *.o
+	rm *.bin *.o *.d
 
