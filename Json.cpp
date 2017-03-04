@@ -23,3 +23,16 @@ string Json::print()
     free(p);
     return ret;
 }
+
+void Json::parse(string buf)
+{
+    if (root != NULL)
+        cJSON_Delete(root);
+    root = cJSON_Parse(buf.c_str());
+}
+
+string Json::value(string key)
+{
+    cJSON* obj = cJSON_GetObjectItem(root, key.c_str());
+    return obj->valuestring;
+}

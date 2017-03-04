@@ -10,6 +10,8 @@ public:
     ~Json();
     void add(string key, string value);
     string print();
+    void parse(string buf);
+    string value(string key);
 private:
     cJSON *root;
     //forbind less copy

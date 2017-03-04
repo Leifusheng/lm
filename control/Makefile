@@ -1,9 +1,9 @@
 CC := g++
-target := client.bin
+target := control.bin
 srcs := $(shell find -name "*.cpp")
 objs := $(srcs:.cpp=.o)
 deps := $(srcs:.cpp=.d)
-
+CPPFLAGS := -std=c++11
 
 all: ${target}
 
