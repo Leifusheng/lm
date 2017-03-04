@@ -1,5 +1,6 @@
 #include "../lm_def.h"
 #include "../Json.h"
+#include "../lm_public.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
@@ -15,7 +16,7 @@ typedef struct user_t
 {
     string name;
     string ip;
-};
+}user_t;
 
 static map<string, user_t*> users;
 
@@ -37,12 +38,22 @@ void control_add_user(string ip, string name)
 }
 
 
+void control_send(Json& json, u_int16_t port, string ip = "255.255.255.255")
+{
+    string buf = json.print();
+    struct sockaddr_in addr;
+    addr.sin_addr.s_addr = inet_addr(ip.c_str());
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    sendto(control_other, buf.c_str(), buf.size(), 0, (struct sockaddr*)&addr, sizeof(addr));
+}
+
 void control_init()
 {
     epollfd = epoll_create(512);
-    control_ui = control_create_socket(CONTROL_UI_PORT);
-    control_other = control_create_socket(CONTROL_OTHER_PORT);
-    control_filetransmit = control_create_socket(CONTROL_FILETRANSMIT_PORT);
+    control_ui = create_udp_socket(CONTROL_UI_PORT);
+    control_other = create_udp_socket(CONTROL_OTHER_PORT);
+    control_filetransmit = create_udp_socket(CONTROL_FILETRANSMIT_PORT);
 
     //set control other broadcast function
     int optval = 1;
@@ -100,17 +111,20 @@ void control_handle_ui()
             control_send(json, UI_CONTROL_PORT, "127.0.0.1");
         }
     }
+    else if (cmd == LM_TO)
+    {
+        /*
+         * json.add(LM_CMD, LM_TO);
+        json.add(LM_RECV, recvip);
+        json.add(LM_MSG, msg);
+        */
+        string toip = json.value(LM_RECV);
+        json.add(LM_BY, myname);
+        control_send(json, CONTROL_OTHER_PORT, toip);
+        //string content = json.value(LM_MSG);
+    }
 }
 
-void control_send(Json& json, u_int16_t port, string ip = "255.255.255.255")
-{
-    string buf = json.print();
-    struct sockaddr_in addr;
-    addr.sin_addr.s_addr = inet_addr(ip.c_str());
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    sendto(control_other, buf.c_str(), buf.size(), 0, (struct sockaddr*)&addr, sizeof(addr));
-}
 
 void control_handle_other()
 {
@@ -121,13 +135,13 @@ void control_handle_other()
     Json json;
     json.parse(buf);
     string cmd = json.value(LM_CMD);
-
+    string ip = inet_ntoa(addr.sin_addr);
 
     if (cmd == LM_SETNAME)
     {
         //1.check this is new user
         string name = json.value(LM_NAME);
-        string ip = inet_ntoa(addr.sin_addr);
+
         user_t* user = control_find_user(ip);
         if (user == NULL)
         {
@@ -158,6 +172,24 @@ void control_handle_other()
         {
             user->name = name;
         }
+    }
+    else if (cmd == LM_TO)
+    {
+        /*
+         * json.add(LM_CMD, LM_TO);
+        json.add(LM_RECV, recvip);
+        json.add(LM_MSG, msg);
+        json.add(LM_BY, myname);
+        */
+        string msg = json.value(LM_MSG);
+        string by = json.value(LM_FROM_NAME);
+        //send content to ui
+        Json toui;
+        toui.add(LM_CMD, LM_MSG);
+        toui.add(LM_FROM_NAME, by);
+        toui.add(LM_FROM_IP, ip);
+        toui.add(LM_MSG, msg);
+        control_send(toui, UI_CONTROL_PORT, "127.0.0.1");
     }
 
 }

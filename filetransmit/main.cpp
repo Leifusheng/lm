@@ -14,7 +14,10 @@ void filetransmit_init()
     ft_server = create_server(FT_PORT, "127.0.0.1", 250);
 }
 
-void filetransmit_run();
+void filetransmit_run()
+{
+
+}
 
 
 int main()

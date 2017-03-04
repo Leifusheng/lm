@@ -1,5 +1,7 @@
 #ifndef LM_PUBLIC_H
 #define LM_PUBLIC_H
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 int create_udp_socket(uint16_t port)
 {

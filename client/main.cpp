@@ -76,6 +76,26 @@ void ui_handle_cmd(char *buf)
         //send json to ui
         ui_send_control(obj);
     }
+    else if (strcmp(cmd, LM_TO) == 0)
+    {
+        /*
+         * to ip:content
+         * to all:content  to 255.255.255.255:content
+         * json
+         * {
+         * cmd to
+         * recv ip
+         * msg content
+         * }
+        */
+        string recvip = strtok(NULL, ":");
+        string content = strtok(NULL, "\0");
+        Json json;
+        json.add(LM_CMD, LM_TO);
+        json.add(LM_RECV, recvip);
+        json.add(LM_MSG, content);
+        ui_send_control(json);
+    }
 
 }
 
@@ -104,6 +124,13 @@ void ui_get_message_from_control()
         string ip = json.value(LM_IP);
         string name = json.value(LM_NAME);
         printf("user ip = %s, user name is %s \n", ip.c_str(), name.c_str());
+    }
+    else if (cmd == LM_MSG)
+    {
+        string msg = json.value(LM_MSG);
+        string fromname = json.value(LM_FROM_NAME);
+        string fromip = json.value(LM_FROM_IP);
+        printf("%s(%s) say: %s \n", fromname.c_str(), fromip.c_str(), msg.c_str());
     }
 }
 
