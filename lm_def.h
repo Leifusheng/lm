@@ -15,6 +15,7 @@ using namespace std;
 #define LM_CMD "cmd"
 #define LM_NAME "name"
 #define LM_SETNAME_ACK "setname_ack"
+#define LM_LIST "list"
 
 
 #endif // LM_DEF_H

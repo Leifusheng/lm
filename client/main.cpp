@@ -67,6 +67,16 @@ void ui_handle_cmd(char *buf)
         //send json to ui
         ui_send_control(obj);
     }
+    else if (strcmp(cmd, LM_LIST) == 0)
+    {
+        //user ask user list
+        Json obj;
+        obj.add(LM_CMD, LM_LIST);
+
+        //send json to ui
+        ui_send_control(obj);
+    }
+
 }
 
 void ui_handle_user_input()
@@ -83,7 +93,18 @@ void ui_handle_user_input()
 
 void ui_get_message_from_control()
 {
-
+    char buf[2048];
+    recv(ui_control, buf, sizeof(buf), 0);
+    Json json;
+    json.parse(buf);
+    string cmd = json.value(LM_CMD);
+    if (cmd == LM_LIST_ACK)
+    {
+        //user ask user list
+        string ip = json.value(LM_IP);
+        string name = json.value(LM_NAME);
+        printf("user ip = %s, user name is %s \n", ip.c_str(), name.c_str());
+    }
 }
 
 void ui_get_message_from_filetransmit()

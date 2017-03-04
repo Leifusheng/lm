@@ -36,16 +36,6 @@ void control_add_user(string ip, string name)
     users[ip] = user;
 }
 
-int control_create_socket(uint16_t port)
-{
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    struct sockaddr_in addr;
-    addr.sin_addr.s_addr = 0;
-    addr.sin_port = htons(port);
-    addr.sin_family = AF_INET;
-    bind(fd, (struct sockaddr*)&addr, sizeof(addr));
-    return fd;
-}
 
 void control_init()
 {
@@ -97,6 +87,29 @@ void control_handle_ui()
         //broadcast my name
         control_broadcast(json);
     }
+    else if (cmd == LM_LIST)
+    {
+        //send all user info to ui
+        for (auto it = users.begin(); it != users.end(); it++)
+        {
+            user_t* user = it->second;
+            Json json;
+            json.add(LM_CMD, LM_LIST_ACK);
+            json.add(LM_IP, user->ip);
+            json.add(LM_NAME, user->name);
+            control_send(json, UI_CONTROL_PORT, "127.0.0.1");
+        }
+    }
+}
+
+void control_send(Json& json, u_int16_t port, string ip = "255.255.255.255")
+{
+    string buf = json.print();
+    struct sockaddr_in addr;
+    addr.sin_addr.s_addr = inet_addr(ip.c_str());
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    sendto(control_other, buf.c_str(), buf.size(), 0, (struct sockaddr*)&addr, sizeof(addr));
 }
 
 void control_handle_other()
@@ -108,6 +121,8 @@ void control_handle_other()
     Json json;
     json.parse(buf);
     string cmd = json.value(LM_CMD);
+
+
     if (cmd == LM_SETNAME)
     {
         //1.check this is new user
@@ -116,21 +131,33 @@ void control_handle_other()
         user_t* user = control_find_user(ip);
         if (user == NULL)
         {
+            //if new user add to map
+            control_add_user(ip, name);
+            //send my info to the new user
+            Json json_resp;
+            json_resp.add(LM_CMD, LM_SETNAME_ACK);
+            json_resp.add(LM_NAME, myname);
+            control_send(json_resp, CONTROL_OTHER_PORT, ip);
+        }
+        else
+        {
+            //modify name
+            user->name = name;
+        }
+    }
+    else if (cmd == LM_SETNAME_ACK)
+    {
+        string name = json.value(LM_NAME);
+        user_t* user = control_find_user(ip);
+        if (user == NULL)
+        {
+            //add new user
             control_add_user(ip, name);
         }
         else
         {
             user->name = name;
         }
-
-        Json json_resp;
-        json_resp.add(LM_CMD, LM_SETNAME_ACK);
-        json_resp.add(LM_NAME, myname);
-    }
-    else if (cmd == LM_SETNAME_ACK)
-    {
-        string name = json.value(LM_NAME);
-        //user_t*
     }
 
 }
