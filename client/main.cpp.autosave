@@ -8,13 +8,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "../lm_public.h"
+//#include "../lm_public.h"
 
 
 int epollfd;
 int ui_control;
 int ui_filetransmit;
-list<string> ips;
+
 
 void ui_init()
 {

@@ -8,12 +8,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <algorithm>
+using namespace std;
+
 
 int epollfd;
 int control_ui;
 int control_other;
 int control_filetransmit;
 string myname;
+list<string> ips;
 
 typedef struct user_t
 {
@@ -53,6 +58,11 @@ void control_send(Json& json, u_int16_t port, string ip = "255.255.255.255")
 
 void control_init()
 {
+    //get local ip list
+    ips = get_ip_addrs();
+    //token create
+    srand(time(NULL));
+
     epollfd = epoll_create(512);
     control_ui = create_udp_socket(CONTROL_UI_PORT);
     control_other = create_udp_socket(CONTROL_OTHER_PORT);
@@ -191,6 +201,15 @@ void control_handle_other()
     string cmd = json.value(LM_CMD);
     string ip = inet_ntoa(addr.sin_addr);
 
+    if (find(ips.begin(), ips.end(), ip) != ips.end())
+    {
+        return;
+    }
+    if(myname.size() == 0)
+    {
+        return;
+    }
+
     if (cmd == LM_SETNAME)
     {
         //1.check this is new user
@@ -252,8 +271,10 @@ void control_handle_other()
         notify_json.add(LM_FILELEN, (int)stat_buf.st_size);
         notify_json.add(LM_FROM_NAME, myname);
         */
+        //send task to ui ask user recv or not
         Json ui_json;
         ui_json.add(LM_CMD, LM_FILETRANSMIT);
+        //who send file to me
         ui_json.add(LM_SEND, ip);
         ui_json.add(LM_TYPE, LM_RECV);
         ui_json.add(LM_TOKEN, json.value(LM_TOKEN));
