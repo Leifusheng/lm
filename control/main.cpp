@@ -5,6 +5,9 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 int epollfd;
 int control_ui;
@@ -123,6 +126,57 @@ void control_handle_ui()
         control_send(json, CONTROL_OTHER_PORT, toip);
         //string content = json.value(LM_MSG);
     }
+    else if(cmd == LM_SENDFILE)
+    {
+        /*
+         * cmd sendfile
+         * recv:ip
+         * filepath: .....
+        */
+        string toip = json.value(LM_RECV);
+        string path = json.value(LM_FILEPATH);
+
+        /*
+         * cmd ft
+         * filepath: xxx
+         * recv:ip
+         * type:send
+         * token:xxxx
+         * FILELEN: file length
+         * ref:
+        */
+        //get file status
+        struct stat stat_buf;
+        stat(path.c_str(), &stat_buf);
+
+        int token = rand();
+        Json task_json;
+        task_json.add(LM_CMD, LM_FILETRANSMIT);;
+        task_json.add(LM_FILEPATH, path);
+        task_json.add(LM_RECV, toip);
+        task_json.add(LM_TYPE, LM_SEND);
+        task_json.add(LM_TOKEN, token);
+        task_json.add(LM_FILELEN, (int)stat_buf.st_size);
+        if (toip == "255.255.255.255")
+            task_json.add(LM_REF, users.size());
+        else
+            task_json.add(LM_REF, 1);
+        control_send(task_json, FT_CONTROL_PORT, "127.0.0.1");
+        usleep(1000);
+
+        //send message to user,let he recive file
+        Json notify_json;
+        notify_json.add(LM_CMD, LM_FILETRANSMIT);
+        notify_json.add(LM_TOKEN, token);
+        notify_json.add(LM_FILELEN, (int)stat_buf.st_size);
+        notify_json.add(LM_FROM_NAME, myname);
+        control_send(notify_json, CONTROL_OTHER_PORT, toip);
+    }
+    else if (cmd == LM_FILETRANSMIT)
+    {
+        control_send(json, FT_CONTROL_PORT, "127.0.0.1");
+    }
+
 }
 
 
@@ -191,10 +245,26 @@ void control_handle_other()
         toui.add(LM_MSG, msg);
         control_send(toui, UI_CONTROL_PORT, "127.0.0.1");
     }
+    else if (cmd == LM_FILETRANSMIT)
+    {
+        /*
+         *notify_json.add(LM_TOKEN, token);
+        notify_json.add(LM_FILELEN, (int)stat_buf.st_size);
+        notify_json.add(LM_FROM_NAME, myname);
+        */
+        Json ui_json;
+        ui_json.add(LM_CMD, LM_FILETRANSMIT);
+        ui_json.add(LM_SEND, ip);
+        ui_json.add(LM_TYPE, LM_RECV);
+        ui_json.add(LM_TOKEN, json.value(LM_TOKEN));
+        ui_json.add(LM_FILELEN, json.value(LM_FILELEN));
+        ui_json.add(LM_FROM_NAME, json.value(LM_FROM_NAME));
+        control_send(ui_json, UI_CONTROL_PORT, "127.0.0.1");
+    }
 
 }
 
-void control_handle__filetransmit()
+void control_handle_filetransmit()
 {
 
 }
@@ -202,28 +272,28 @@ void control_handle__filetransmit()
 void control_run()
 {
     struct epoll_event ev;
-        while(1)
+    while(1)
+    {
+        int ret = epoll_wait(epollfd, &ev, 1, 5000);
+        if (ret > 0)
         {
-            int ret = epoll_wait(epollfd, &ev, 1, 5000);
-            if (ret > 0)
+            //ui send message
+            if (ev.data.fd == control_ui)
             {
-                //ui send message
-                if (ev.data.fd == control_ui)
-                {
-                    control_handle_ui();
-                }
-                //othre send message
-                else if (ev.data.fd == control_other)
-                {
-                    control_handle_other();
-                }
-                //filetransmit send message
-                else if (ev.data.fd == control_filetransmit)
-                {
-                    control_handle__filetransmit();
-                }
+                control_handle_ui();
+            }
+            //othre send message
+            else if (ev.data.fd == control_other)
+            {
+                control_handle_other();
+            }
+            //filetransmit send message
+            else if (ev.data.fd == control_filetransmit)
+            {
+                control_handle_filetransmit();
             }
         }
+    }
 }
 
 int main()

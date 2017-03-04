@@ -1,5 +1,6 @@
 #ifndef JSON_H
 #define JSON_H
+#include <stdlib.h>
 #include <string>
 #include "cJSON.h"
 using namespace std;
@@ -9,6 +10,7 @@ public:
     Json();
     ~Json();
     void add(string key, string value);
+    void add(string key, int value);
     string print();
     void parse(string buf);
     string value(string key);

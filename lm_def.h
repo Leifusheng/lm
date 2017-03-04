@@ -27,6 +27,17 @@ using namespace std;
 #define LM_BY "by"
 #define LM_FROM_NAME "fromname"
 #define LM_FROM_IP "fromip"
+#define LM_FILEPATH "filepath"
+#define LM_SENDFILE "sendfile"
+#define LM_FILETRANSMIT "ft"
+#define LM_TYPE "type"
+#define LM_FILELEN "filelen"
+#define LM_TOKEN "token"
+#define LM_REF "ref"
+#define LM_SEND "send"
+#define LM_ACK "ack"
+#define LM_YES "yes"
+#define LM_LOCAL_PATH "localpath"
 
 
 #endif // LM_DEF_H

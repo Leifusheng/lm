@@ -5,6 +5,9 @@
 #include "../Json.h"
 #include <arpa/inet.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 
 int epollfd;
@@ -96,6 +99,42 @@ void ui_handle_cmd(char *buf)
         json.add(LM_MSG, content);
         ui_send_control(json);
     }
+    else if (strcmp(cmd, LM_SENDFILE) == 0)
+    {
+        char* recvip = strtok(NULL, ":");
+        char* path = strtok(NULL, "\0");
+
+        //get realpath from sample path
+        char realpath_bk[256];
+        if (realpath(path, realpath_bk) == NULL)
+        {
+            printf("patj error!\n");
+            return;
+        }
+        //query file exist or not
+        struct stat stat_buf;
+        if (stat(realpath_bk, &stat_buf) < 0)
+        {
+            printf("file not exist\n!");
+            return;
+        }
+        //query file can access or not
+        if (access(realpath_bk, R_OK) < 0)
+        {
+            printf("file can not access!\n");
+            return;
+        }
+        /*
+         * cmd sendfile
+         * recv:ip
+         * filepath: .....
+        */
+        Json json;
+        json.add(LM_CMD, LM_SENDFILE);
+        json.add(LM_RECV, recvip);
+        json.add(LM_FILEPATH, realpath_bk);
+        ui_send_control(json);
+    }
 
 }
 
@@ -132,6 +171,14 @@ void ui_get_message_from_control()
         string fromip = json.value(LM_FROM_IP);
         printf("%s(%s) say: %s \n", fromname.c_str(), fromip.c_str(), msg.c_str());
     }
+    else if (cmd == LM_FILETRANSMIT)
+    {
+        printf("%s send a file to me, filelen = %d", json.value(LM_FROM_NAME).c_str()
+               , json.value(LM_FILELEN).c_str());
+        json.add(LM_ACK, LM_YES);
+        json.add(LM_LOCAL_PATH, "/home/saul/Desktop/lm/test.file");
+        ui_send_control(json);
+    }
 }
 
 void ui_get_message_from_filetransmit()
@@ -167,8 +214,31 @@ void ui_run()
     *1.get user input
     *
 */
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 3)
+    {
+        printf("argument error!");
+        return 0;
+    }
+    //get argument
+    char *control_path = argv[1];
+    char *ft_path = argv[2];
+    //start control
+    pid_t pid = fork();
+    if (pid == 0)
+    {
+        execl(control_path, control_path, NULL);
+        printf("start control error!\n");
+        return 0;
+    }
+    pid = fork();
+    if (pid == 0)
+    {
+       execl(ft_path, ft_path, NULL);
+       printf("start filetransmit error!\n");
+       return 0;
+    }
     /*
         *create sockets
         * create epoll
