@@ -161,7 +161,8 @@ void control_handle_ui()
         struct stat stat_buf;
         stat(path.c_str(), &stat_buf);
 
-        int token = rand();
+        //int token = rand();
+        token++;
         Json task_json;
         task_json.add(LM_CMD, LM_FILETRANSMIT);;
         task_json.add(LM_FILEPATH, path);

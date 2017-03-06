@@ -1,9 +1,9 @@
-CC := g++
 target := client.bin
 srcs := $(shell find -name "*.cpp")
 objs := $(srcs:.cpp=.o)
 deps := $(srcs:.cpp=.d)
 
+-include ../def.mk
 
 all: ${target}
 
@@ -11,7 +11,7 @@ all: ${target}
 test:
 	echo $(pub_obj)
 $(target): $(objs) $(pub_obj)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ ${LIBS}
 
 -include $(deps)
 %.d: %.cpp

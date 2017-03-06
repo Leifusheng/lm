@@ -8,3 +8,5 @@ cJSON.c
 cJSON.h
 lm_public.h
 socket.h
+lm_autolock.h
+lm_autolock.cpp

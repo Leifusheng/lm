@@ -1,5 +1,7 @@
-CC := g++
 target := filetransmit.bin
+
+-include ../def.mk
+
 srcs := $(shell find -name "*.cpp")
 objs := $(srcs:.cpp=.o)
 deps := $(srcs:.cpp=.d)
@@ -11,7 +13,7 @@ all: ${target}
 test:
 	echo $(pub_obj)
 $(target): $(objs) $(pub_obj)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ ${LIBS}
 
 -include $(deps)
 %.d: %.cpp

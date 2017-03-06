@@ -1,4 +1,4 @@
-CC=g++
+-include def.mk
 srcs := $(shell ls *.cpp)
 objs := $(srcs:.cpp=.o)
 deps := $(srcs:.cpp=.d)
@@ -9,7 +9,7 @@ all:$(objs)
 
 -include $(deps)
 %.d: %.cpp
-	$(CC) -MM $< > $@
+	$(CC) -MM $< > $@ $(LIBS)
 
 clean:
 	rm *.d *.o *.bin

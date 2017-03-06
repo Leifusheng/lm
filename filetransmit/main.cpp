@@ -2,9 +2,12 @@
 #include "../lm_public.h"
 #include "../socket.h"
 #include "../Json.h"
+#include "../lm_autolock.h"
 #include <list>
+#include <algorithm>
 using namespace std;
 
+pthread_mutex_t mutex;
 int ft_server; //tcp server accept
 int ft_control;//udp control to file transmit
 int ft_ui;  //check file send progress
@@ -22,8 +25,50 @@ typedef struct lm_task_t
     int file_transmit_len;
 }lm_task_t;
 
-list<lm_task_t*> lm_tasks;
+list<lm_task_t*> lm_recvs;
+map<string, lm_task_t*> lm_sends;
 list<lm_task_t*> lm_complete_tasks;
+
+void *recv_thread(void *ptr)
+{
+    lm_task_t* recvtask = (lm_task_t*)ptr;
+    int sock = connect_server(recvtask->ip.c_str(), FT_SERVER_PORT);
+    int total_len = recvtask->filelen;
+    FILE* fp = fopen(recvtask->path.c_str(), "w");
+
+    char buf[1024];
+    //send token
+    int token = atoi(recvtask->token.c_str());
+    token = htonl(token);
+    doSend(sock, (char *)&token, sizeof(token));
+
+    while (1)
+    {
+        int ret = recv(sock, buf, sizeof(buf), 0);
+        if (ret > 0)
+        {
+            fwrite(buf, ret, 1, fp);
+            recvtask->file_transmit_len += ret;
+        }
+        else if (ret <= 0)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            break;
+        }
+    }
+    {
+        lm_autolock lock(mutex);
+        auto it = find(lm_recvs.begin(), lm_recvs.end(), recvtask);
+        if (it != lm_recvs.end())
+            lm_recvs.erase(it);
+        lm_complete_tasks.push_back(recvtask);
+    }
+    fclose(fp);
+    close(sock);
+}
 
 void filetransmit_init()
 {
@@ -71,7 +116,8 @@ void ft_handle_control()
             task->ref = atoi(json.value(LM_REF).c_str());
             printf("task ref=%d, toip:%s type:%s\n",
                    task->ref, task->ip.c_str(), task->type.c_str());
-            lm_tasks.push_back(task);
+            lm_autolock lock(mutex);
+            lm_sends[task->token] = task;
         }
         else if (type == LM_RECV)
         {
@@ -94,9 +140,72 @@ void ft_handle_control()
             task->ref = 1;
             task->file_transmit_len = 0;
             printf("ready to recv file:%s\n", task->path.c_str());
-            lm_tasks.push_back(task);
+            lm_autolock lock(mutex);
+            lm_recvs.push_back(task);
+            //create recive thread
+            pthread_t tid;
+            pthread_create(&tid, NULL, recv_thread, task);
+            pthread_detach(tid);
         }
     }
+}
+
+void *send_thread(void* ptr)
+{
+    int fd = (intptr_t)ptr;
+    //recive token
+    int token;
+    if (doRecv(fd, (char *)&token, 4) != 4)
+    {
+        close(fd);
+        return NULL;
+    }
+    token = ntohl(token);
+    //send file
+    char buf[1024];
+    sprintf(buf, "%d", token);
+    string key = buf;
+    lm_task_t* task_send;
+    {
+        lm_autolock lock(mutex);
+        if (lm_sends.find(key)!= lm_sends.end())
+        {
+            close(fd);
+            return NULL;
+        }
+        task_send = lm_sends[key];
+    }
+    FILE *fp = fopen(task_send->path.c_str(), "r");
+    //send file
+    while(1)
+    {
+        int ret = fread(buf, 1, sizeof(buf), fp);
+        if (ret > 0)
+        {
+            if (doSend(fd, buf, ret) != ret)
+            {
+                break;
+            }
+        }
+        else
+            break;
+    }
+    {
+        lm_autolock lock(mutex);
+        lm_sends.erase(key);
+        lm_complete_tasks.push_back(task_send);
+    }
+    close(fd);
+    fclose(fp);
+}
+
+void ft_handle__server()
+{
+    int newfd = accept(ft_server, NULL, NULL);
+    //create pthread
+    pthread_t tid;
+    pthread_create(&tid, NULL, send_thread, (void *)(intptr_t)&newfd);
+    pthread_detach(tid);
 }
 
 void filetransmit_run()
@@ -122,7 +231,7 @@ void filetransmit_run()
             }
             else if (FD_ISSET(ft_server, &check_set))
             {
-                //ft_handle__server();
+                ft_handle__server();
             }
         }
     }
@@ -131,6 +240,7 @@ void filetransmit_run()
 
 int main()
 {
+    lm_mutex_init(mutex);
     filetransmit_init();
     filetransmit_run();
     return 0;

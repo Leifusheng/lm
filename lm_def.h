@@ -13,6 +13,7 @@ using namespace std;
 #define FT_CONTROL_PORT 10006
 #define FT_UI_PORT 10007
 #define FT_PORT 10008
+#define FT_SERVER_PORT 10009
 
 #define LM_SETNAME "setname"
 #define LM_CMD "cmd"
