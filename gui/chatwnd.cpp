@@ -16,5 +16,5 @@ ChatWnd::~ChatWnd()
 void ChatWnd::on_send_clicked()
 {
     QString text = ui->input->toPlainText();
-    emit newmessage(text, ip);
+    emit signewmessage(text, ip);
 }
