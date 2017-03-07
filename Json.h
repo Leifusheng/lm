@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <string>
 #include "cJSON.h"
+#include <map>
 using namespace std;
+
 class Json
 {
 public:

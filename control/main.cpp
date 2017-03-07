@@ -233,6 +233,13 @@ void control_handle_other()
             //modify name
             user->name = name;
         }
+        user = control_find_user(ip);
+        //notify other some one enter
+        Json resp;
+        resp.add(LM_CMD, LM_LIST_ACK);
+        resp.add(LM_IP, user->ip);
+        resp.add(LM_NAME, user->name);
+        control_send(resp, UI_CONTROL_PORT, "127.0.0.1");
     }
     else if (cmd == LM_SETNAME_ACK)
     {
@@ -247,6 +254,13 @@ void control_handle_other()
         {
             user->name = name;
         }
+        user = control_find_user(ip);
+        //notify other some one enter
+        Json resp;
+        resp.add(LM_CMD, LM_LIST_ACK);
+        resp.add(LM_IP, user->ip);
+        resp.add(LM_NAME, user->name);
+        control_send(resp, UI_CONTROL_PORT, "127.0.0.1");
     }
     else if (cmd == LM_TO)
     {

@@ -1,0 +1,35 @@
+#ifndef APP_H
+#define APP_H
+
+#include <QObject>
+#include <QMenu>
+#include <QSystemTrayIcon>
+#include "userlist.h"
+#include <QUdpSocket>
+#include "chatwnd.h"
+#include <QMap>
+
+class App : public QObject
+{
+    Q_OBJECT
+public:
+    explicit App(QObject *parent = 0);
+    QSystemTrayIcon* _icon;
+    QMenu* controlnemu;
+    Userlist* userlist;
+    QUdpSocket* uicontrol;
+    QUdpSocket* uifiletransmit;
+    QMap<QString, ChatWnd *> chatwnds;
+
+signals:
+
+public slots:
+    void slotOpen();
+    void slotSetusername(QString);
+    void uiControlReadyRead();
+    void slotnewmessage(QString msg, QString ip);
+    void slotNewwnd(QString ip, QString name);
+
+};
+
+#endif // APP_H

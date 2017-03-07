@@ -1,9 +1,6 @@
 #ifndef LM_DEF_H
 #define LM_DEF_H
-#include <string>
-#include <map>
 
-using namespace std;
 
 #define UI_CONTROL_PORT 10001
 #define UI_FILETRANSMIT_PORT 10002
