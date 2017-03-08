@@ -51,7 +51,7 @@ void ui_send_control(Json &json)
     addr.sin_family = AF_INET;
     addr.sin_port = htons(CONTROL_UI_PORT);
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    printf("%s\n", packet.c_str());
+    printf("ui send control:\n %s\n", packet.c_str());
     sendto(ui_control, packet.c_str(), packet.size(), 0, (struct sockaddr*)&addr, sizeof(addr));
 }
 
@@ -148,7 +148,7 @@ void ui_handle_user_input()
     if (strlen(buf) == 0)
         return;
     //setname frank
-    printf("%s/n", buf);
+    printf("%s\n", buf);
     ui_handle_cmd(buf);
 }
 
@@ -175,7 +175,7 @@ void ui_get_message_from_control()
     }
     else if (cmd == LM_FILETRANSMIT)
     {
-        printf("%s send a file to me, filelen = %d", json.value(LM_FROM_NAME).c_str()
+        printf("%s send a file to me, filelen = %s", json.value(LM_FROM_NAME).c_str()
                , json.value(LM_FILELEN).c_str());
         json.add(LM_ACK, LM_YES);
         json.add(LM_LOCAL_PATH, "/home/saul/Desktop/lm/test.file");
@@ -218,6 +218,7 @@ void ui_run()
 */
 int main(int argc, char* argv[])
 {
+    /*
     if (argc != 3)
     {
         printf("argument error!");
@@ -235,12 +236,13 @@ int main(int argc, char* argv[])
         return 0;
     }
     pid = fork();
-    if (pid == 0)
+    if(pid == 0)
     {
        execl(ft_path, ft_path, NULL);
        printf("start filetransmit error!\n");
        return 0;
     }
+    */
     /*
         *create sockets
         * create epoll
