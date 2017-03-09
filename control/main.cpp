@@ -104,6 +104,7 @@ void control_handle_ui()
     Json json;
     json.parse(buf);
     string cmd = json.value(LM_CMD);
+    printf("ctrl handle ui %s", buf);
     if (cmd == LM_SETNAME)
     {
         string name = json.value(LM_NAME);
@@ -197,12 +198,13 @@ void control_handle_other()
     struct sockaddr_in addr;
     socklen_t socklen = sizeof(addr);
     char buf[2048];
-    recvfrom(control_ui, buf, sizeof(buf), 0, (struct sockaddr*)&addr, &socklen);
+    recvfrom(control_other, buf, sizeof(buf), 0, (struct sockaddr*)&addr, &socklen);
     Json json;
     json.parse(buf);
     string cmd = json.value(LM_CMD);
     string ip = inet_ntoa(addr.sin_addr);
-
+    
+    printf("ip %s cmd %s\n", ip.c_str(), cmd.c_str());
     if (find(ips.begin(), ips.end(), ip) != ips.end())
     {
         return;
@@ -261,24 +263,35 @@ void control_handle_other()
         resp.add(LM_IP, user->ip);
         resp.add(LM_NAME, user->name);
         control_send(resp, UI_CONTROL_PORT, "127.0.0.1");
+	printf("control send end\n");
     }
     else if (cmd == LM_TO)
     {
+	printf("to buf %s\n", json.print().c_str());
         /*
          * json.add(LM_CMD, LM_TO);
         json.add(LM_RECV, recvip);
         json.add(LM_MSG, msg);
         json.add(LM_BY, myname);
         */
+	printf("1\n");
         string msg = json.value(LM_MSG);
-        string by = json.value(LM_FROM_NAME);
+	printf("2\n");
+        string by = json.value(LM_BY);
         //send content to ui
+	printf("3\n");
         Json toui;
+	printf("4\n");
         toui.add(LM_CMD, LM_MSG);
+	printf("5\n");
         toui.add(LM_FROM_NAME, by);
+	printf("6\n");
         toui.add(LM_FROM_IP, ip);
+	printf("7\n");
         toui.add(LM_MSG, msg);
+	printf("control send start\n");
         control_send(toui, UI_CONTROL_PORT, "127.0.0.1");
+	printf("control send end\n");
     }
     else if (cmd == LM_FILETRANSMIT)
     {
@@ -314,6 +327,11 @@ void control_run()
         int ret = epoll_wait(epollfd, &ev, 1, 5000);
         if (ret > 0)
         {
+            printf("control ui %d\n", control_ui);
+            printf("control other %d\n", control_other);
+            printf("control filetransmit %d\n", control_filetransmit);
+
+            printf("fd is %d\n", ev.data.fd);
             //ui send message
             if (ev.data.fd == control_ui)
             {

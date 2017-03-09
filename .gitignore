@@ -6,3 +6,6 @@ lm.creator
 lm.files
 lm.includes
 lm.creator.user
+build-gui*
+*.*~
+*.user
