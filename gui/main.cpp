@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
     //start control
     QProcess control, ft;
     control.start("../control/control.bin");
-    ft.start("../filetransmit/filetransmit.bin");
+    //ft.start("../filetransmit/filetransmit.bin");
     //start file transmit
     QApplication app(argc, argv);
     App* a = new App;

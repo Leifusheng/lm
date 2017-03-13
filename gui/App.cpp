@@ -89,6 +89,6 @@ void App::slotNewwnd(QString ip, QString name)
         wnd->setWindowTitle(title);
         wnd->show();
         chatwnds[ip] = wnd;
-        connect(wnd, SIGNAL(signewmessage(QString, QString)), this, SLOT(slotNewwnd(QString,QString)));
+        connect(wnd, SIGNAL(signewmessage(QString, QString)), this, SLOT(slotnewmessage(QString,QString)));
     }
 }
