@@ -30,7 +30,6 @@ App::App(QObject *parent) :
     controlnemu = new QMenu;
     controlnemu->addAction("open",  this, SLOT(slotOpen()));
     controlnemu->addAction("exit", qApp, SLOT(quit()));
-    connect(this, SIGNAL(slgcancel()), qApp, SLOT(quit()));
     _icon->setContextMenu(controlnemu);
     _icon->show();
 }
@@ -76,11 +75,6 @@ void App::slotSetusername(QString name)
     uicontrol->writeDatagram(buf, QHostAddress::LocalHost, CONTROL_UI_PORT);
 }
 
-void App::soltcancelsetname()
-{
-    qDebug() << "cansel set name";
-    emit slgcancel();
-}
 
 void App::uiControlReadyRead()
 {

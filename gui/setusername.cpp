@@ -30,7 +30,6 @@ void SetUsername::on_oksetname_clicked()
 
 void SetUsername::on_cancelsetname_clicked()
 {
-
     emit sigcancel();
     accept();
 }

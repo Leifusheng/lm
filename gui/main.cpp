@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     App* a = new App;
     SetUsername *setname = new SetUsername;
     QObject::connect(setname, SIGNAL(signame(QString)), a, SLOT(slotSetusername(QString)));
-    QObject::connect(setname, SIGNAL(sigcancel()), a, SLOT(soltcancelsetname()));
+    QObject::connect(setname, SIGNAL(sigcancel()),  qApp, SLOT(closeAllWindows()));
     setname->exec();
     delete setname;
     app.exec();
