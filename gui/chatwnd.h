@@ -18,8 +18,11 @@ public:
     QString ip;
 signals:
     void signewmessage(QString msg, QString ip);
+    void sigsendfile(QString ip, QString path);
 private slots:
     void on_send_clicked();
+
+    void on_send_file_clicked();
 
 private:
     Ui::ChatWnd *ui;

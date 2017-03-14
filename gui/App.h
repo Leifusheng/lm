@@ -23,13 +23,15 @@ public:
     ChatWnd* getChatWnd(QString ip, QString name);
 
 signals:
-
+    void slgcancel();
 public slots:
     void slotOpen();
     void slotSetusername(QString);
+    void soltcancelsetname();
     void uiControlReadyRead();
     void slotnewmessage(QString msg, QString ip);
     void slotNewwnd(QString ip, QString name);
+    void slotsendfile(QString ip, QString path);
 
 };
 

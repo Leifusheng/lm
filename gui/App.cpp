@@ -3,8 +3,11 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QDebug>
+#include <QFileDialog>
 #include "../lm_def.h"
 #include "chatwnd.h"
+
 
 App::App(QObject *parent) :
     QObject(parent)
@@ -27,6 +30,7 @@ App::App(QObject *parent) :
     controlnemu = new QMenu;
     controlnemu->addAction("open",  this, SLOT(slotOpen()));
     controlnemu->addAction("exit", qApp, SLOT(quit()));
+    connect(this, SIGNAL(slgcancel()), qApp, SLOT(quit()));
     _icon->setContextMenu(controlnemu);
     _icon->show();
 }
@@ -72,6 +76,12 @@ void App::slotSetusername(QString name)
     uicontrol->writeDatagram(buf, QHostAddress::LocalHost, CONTROL_UI_PORT);
 }
 
+void App::soltcancelsetname()
+{
+    qDebug() << "cansel set name";
+    emit slgcancel();
+}
+
 void App::uiControlReadyRead()
 {
     //get next buf size
@@ -111,6 +121,29 @@ void App::uiControlReadyRead()
         QString msg = root.value(LM_MSG).toString();
         wnd->showMessage(name, msg);
     }
+    else if (cmd == LM_FILETRANSMIT)
+    {
+        /*
+         * ui_json.add(LM_CMD, LM_FILETRANSMIT);
+        //who send file to me
+        ui_json.add(LM_SEND, ip);
+        ui_json.add(LM_TYPE, LM_RECV);
+        ui_json.add(LM_TOKEN, json.value(LM_TOKEN));
+        ui_json.add(LM_FILELEN, json.value(LM_FILELEN));
+        ui_json.add(LM_FROM_NAME, json.value(LM_FROM_NAME));
+        json.add(LM_ACK, LM_YES);
+        json.add(LM_LOCAL_PATH, "/home/saul/Desktop/lm/test.file");
+        */
+        QString local_path = QFileDialog::getSaveFileName();
+        if (local_path.size() == 0)
+        {
+            local_path = "/home/saul/Desktop/lm/test.file";
+        }
+        root.insert(LM_ACK, LM_YES);
+        root.insert(LM_LOCAL_PATH, local_path);
+        QByteArray buf = QJsonDocument(root).toJson();
+        uicontrol->writeDatagram(buf, QHostAddress::LocalHost, CONTROL_UI_PORT);
+    }
 }
 
 void App::slotnewmessage(QString msg, QString ip)
@@ -126,4 +159,21 @@ void App::slotnewmessage(QString msg, QString ip)
 void App::slotNewwnd(QString ip, QString name)
 {
     getChatWnd(ip, name);
+}
+
+void App::slotsendfile(QString ip, QString path)
+{
+    /*
+     * Json json;
+        json.add(LM_CMD, LM_SENDFILE);
+        json.add(LM_RECV, recvip);
+        json.add(LM_FILEPATH, realpath_bk);
+    */
+
+    QJsonObject obj;
+    obj.insert(LM_CMD, LM_SENDFILE);
+    obj.insert(LM_FILEPATH, path);
+    obj.insert(LM_RECV, ip);
+    QByteArray buf = QJsonDocument(obj).toJson();
+    uicontrol->writeDatagram(buf, QHostAddress::LocalHost, CONTROL_UI_PORT);
 }

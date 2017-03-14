@@ -20,7 +20,6 @@ signals:
 
 private slots:
     void on_oksetname_clicked();
-
     void on_cancelsetname_clicked();
 
 private:
