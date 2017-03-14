@@ -6,6 +6,12 @@ Userlist::Userlist(QWidget *parent) :
     ui(new Ui::Userlist)
 {
     ui->setupUi(this);
+    QListWidgetItem* item = new QListWidgetItem;
+    QString label = "all(255.255.255.255)";
+    item->setData(Qt::DisplayRole, label);
+    item->setData(Qt::UserRole, "255.255.255.255");
+    item->setData(Qt::UserRole+1, "all");
+    ui->listWidget->addItem(item);
 }
 
 Userlist::~Userlist()

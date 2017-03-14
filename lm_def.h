@@ -36,6 +36,7 @@
 #define LM_ACK "ack"
 #define LM_YES "yes"
 #define LM_LOCAL_PATH "localpath"
+#define LM_IS_BROADCAST "isbroadcast"
 
 
 #endif // LM_DEF_H

@@ -136,6 +136,13 @@ void control_handle_ui()
         */
         string toip = json.value(LM_RECV);
         json.add(LM_BY, myname);
+        if (toip == "255.255.255.255")
+        {
+            json.add(LM_IS_BROADCAST, 1);
+        }
+        else
+            json.add(LM_IS_BROADCAST, 0);
+
         control_send(json, CONTROL_OTHER_PORT, toip);
         //string content = json.value(LM_MSG);
     }
@@ -263,35 +270,36 @@ void control_handle_other()
         resp.add(LM_IP, user->ip);
         resp.add(LM_NAME, user->name);
         control_send(resp, UI_CONTROL_PORT, "127.0.0.1");
-	printf("control send end\n");
+        printf("control send end\n");
     }
     else if (cmd == LM_TO)
     {
-	printf("to buf %s\n", json.print().c_str());
+        printf("to buf %s\n", json.print().c_str());
         /*
          * json.add(LM_CMD, LM_TO);
         json.add(LM_RECV, recvip);
         json.add(LM_MSG, msg);
         json.add(LM_BY, myname);
         */
-	printf("1\n");
+        printf("1\n");
         string msg = json.value(LM_MSG);
-	printf("2\n");
+        printf("2\n");
         string by = json.value(LM_BY);
         //send content to ui
-	printf("3\n");
+        printf("3\n");
         Json toui;
-	printf("4\n");
+        printf("4\n");
         toui.add(LM_CMD, LM_MSG);
-	printf("5\n");
+        printf("5\n");
         toui.add(LM_FROM_NAME, by);
-	printf("6\n");
+        printf("6\n");
         toui.add(LM_FROM_IP, ip);
-	printf("7\n");
+        printf("7\n");
         toui.add(LM_MSG, msg);
-	printf("control send start\n");
+        printf("control send start\n");
+        toui.add(LM_IS_BROADCAST, json.value(LM_IS_BROADCAST));
         control_send(toui, UI_CONTROL_PORT, "127.0.0.1");
-	printf("control send end\n");
+        printf("control send end\n");
     }
     else if (cmd == LM_FILETRANSMIT)
     {

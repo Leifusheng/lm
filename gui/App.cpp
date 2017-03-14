@@ -97,8 +97,18 @@ void App::uiControlReadyRead()
         */
         QString ip = root.value(LM_IP).toString();
         QString name = root.value(LM_NAME).toString();
+        QString broad = root.value(LM_IS_BROADCAST).toString();
+        ChatWnd *wnd;
+        if (broad == "1")
+        {
+            ip = "255.255.255.255";
+            wnd = getChatWnd(ip, "all");
+        }
+        else
+        {
+            wnd = getChatWnd(ip, name);
+        }
         QString msg = root.value(LM_MSG).toString();
-        ChatWnd *wnd = getChatWnd(ip, name);
         wnd->showMessage(name, msg);
     }
 }
