@@ -14,6 +14,7 @@ class ChatWnd : public QWidget
 public:
     explicit ChatWnd(QWidget *parent = 0);
     ~ChatWnd();
+    void showMessage(QString name, QString msg);
     QString ip;
 signals:
     void signewmessage(QString msg, QString ip);

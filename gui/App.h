@@ -20,6 +20,7 @@ public:
     QUdpSocket* uicontrol;
     QUdpSocket* uifiletransmit;
     QMap<QString, ChatWnd *> chatwnds;
+    ChatWnd* getChatWnd(QString ip, QString name);
 
 signals:
 
